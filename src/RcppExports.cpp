@@ -5,19 +5,20 @@
 
 using namespace Rcpp;
 
-// rcpp_hello
-List rcpp_hello();
-RcppExport SEXP _boostme_rcpp_hello() {
+// neighbors
+List neighbors(NumericMatrix posAndBetas);
+RcppExport SEXP _boostme_neighbors(SEXP posAndBetasSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello());
+    Rcpp::traits::input_parameter< NumericMatrix >::type posAndBetas(posAndBetasSEXP);
+    rcpp_result_gen = Rcpp::wrap(neighbors(posAndBetas));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_boostme_rcpp_hello", (DL_FUNC) &_boostme_rcpp_hello, 0},
+    {"_boostme_neighbors", (DL_FUNC) &_boostme_neighbors, 1},
     {NULL, NULL, 0}
 };
 
