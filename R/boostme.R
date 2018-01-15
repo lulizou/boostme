@@ -1,9 +1,9 @@
-#' Function for training and and imputing with a boostme model. Requires at
-#' least 3 samples in the same tissue.
+#' Function for training and and imputing with a boostme model.
 #'
 #'
 #' Uses the \code{xgboost} framework (C) Tianqi Chen, Tong He, Michael Benesty,
-#' Vadim Khotilovich, Yuan Tang.
+#' Vadim Khotilovich, Yuan Tang. Sample average feature requires at
+#' least 3 samples in the bsseq object.
 #'
 #' @param bs a bsseq object containing the methylation & coverage values
 #' as well as the features loaded into \code{pData(bs)}. If no features
@@ -31,7 +31,7 @@
 #' e.g. list(chromState = "chromatinStates.bed")
 #' @param threads (optional) number of threads to use for training. default = 2
 #' @return a new bsseq object that has the imputed values (if imputeAndReplace
-#' is TRUE).
+#' is TRUE). Otherwise doesn't return anything; just prints RMSE (dry run).
 #'
 #' @importClassesFrom bsseq BSseq
 #' @importMethodsFrom bsseq pData seqnames sampleNames start width
@@ -125,13 +125,12 @@ boostme <- function(bs,
                     "out of", length(yCov), "in", sampleNames(bs)[i],
                     "CpGs have minCov <", minCov))
 
-      # build y & x data frame
-      y <- as.vector(getMeth(bs[,i], type = "raw"))
-      dat <- data.frame(beta = y,
-                        upNeighb = lag(y),
-                        downNeighb = lead(y),
-                        sampleAvg = rowMeans(getMeth(bs[,-i], type = "raw"),
-                                             na.rm = T))
+      # build features for all sites in the sample
+      dat <- constructFeatures(bs, sample = i, minCov = minCov,
+                               sampleAvg = sampleAvg,
+                               neighbMeth = neighbMeth,
+                               neighbDist = neighbDist,
+                               featureBEDs = featureBEDs)
       enoughInfoToImpute <- replaceThese[which(
         complete.cases(dat[replaceThese, -1]))]
       message(paste(Sys.time(), "Able to impute", length(enoughInfoToImpute),
