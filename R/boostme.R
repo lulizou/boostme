@@ -45,6 +45,7 @@
 
 boostme <- function(bs,
                     imputeAndReplace = TRUE,
+                    randomCpGs = FALSE,
                     trainChr = "chr1",
                     validateChr = "chr22",
                     testChr = "chr2",
@@ -56,8 +57,8 @@ boostme <- function(bs,
                     threads = 2) {
   # checks
   stopifnot(class(bs) == "BSseq")
-  if (nrow(pData(bs)) < 3)
-    stop("At least 3 samples are needed to use BoostMe")
+  if (nrow(pData(bs)) < 3 & sampleAvg == TRUE)
+    stop("At least 3 samples are needed to use the sample average feature")
 
   # divide into train, validate, and test
   train <- chrSelectBSseq(bs, seqnames = trainChr)

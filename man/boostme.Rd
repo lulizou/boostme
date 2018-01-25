@@ -2,8 +2,7 @@
 % Please edit documentation in R/boostme.R
 \name{boostme}
 \alias{boostme}
-\title{Function for training and and imputing with a boostme model. Requires at
-least 3 samples in the same tissue.}
+\title{Function for training and and imputing with a boostme model.}
 \usage{
 boostme(bs, imputeAndReplace = TRUE, trainChr = "chr1",
   validateChr = "chr22", testChr = "chr2", minCov = 10,
@@ -49,9 +48,10 @@ e.g. list(chromState = "chromatinStates.bed")}
 }
 \value{
 a new bsseq object that has the imputed values (if imputeAndReplace
-is TRUE).
+is TRUE). Otherwise doesn't return anything; just prints RMSE (dry run).
 }
 \description{
 Uses the \code{xgboost} framework (C) Tianqi Chen, Tong He, Michael Benesty,
-Vadim Khotilovich, Yuan Tang.
+Vadim Khotilovich, Yuan Tang. Sample average feature requires at
+least 3 samples in the bsseq object.
 }
