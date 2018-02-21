@@ -15,8 +15,8 @@ using namespace Rcpp;
 //' 3    10020 0.01
 //' 3    10112 0.09
 //' (with some NAs in there)
-//' @return A named list with upstream and downstream beta values and distances.
-//' @author Luli Zou
+//' @export
+
 
 // [[Rcpp::export]]
 List neighbors(NumericMatrix posAndBetas) {

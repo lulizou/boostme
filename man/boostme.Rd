@@ -4,9 +4,10 @@
 \alias{boostme}
 \title{Function for training and and imputing with a boostme model.}
 \usage{
-boostme(bs, imputeAndReplace = TRUE, trainChr = "chr1",
-  validateChr = "chr22", testChr = "chr2", minCov = 10,
-  sampleAvg = TRUE, neighbMeth = TRUE, neighbDist = TRUE,
+boostme(bs, imputeAndReplace = TRUE, randomCpGs = FALSE,
+  trainChr = "chr1", validateChr = "chr22", testChr = "chr2",
+  trainSize = 1e+06, validateSize = 1e+06, testSize = 1e+06,
+  minCov = 10, sampleAvg = TRUE, neighbMeth = TRUE, neighbDist = TRUE,
   featureBEDs = NULL, threads = 2)
 }
 \arguments{
@@ -16,7 +17,17 @@ are loaded into \code{pData(bs)}, the model will simply use neighboring
 CpGs and the sample average of the other CpGs.}
 
 \item{imputeAndReplace}{boolean of whether or not to impute and replace
-CpG methylation values below the minCov. Default is TRUE.}
+CpG methylation values below the minCov. Default is TRUE. Set to FALSE if
+want to do a dry run and see the RMSE for each sample.}
+
+\item{randomCpGs}{boolean of whether or not to select a simple random
+sample of CpGs genome-wide or not. Default is FALSE. If TRUE, will ignore
+the trainChr, validateChr, and testChr parameters and select CpGs for the
+training, validation, and test sets at random. Can modify how large
+each of these sets will be individually using the trainSize, validateSize,
+and testSize parameters. Defaults are 1 million CpGs each. NOTE: this takes
+way longer to do than simply dividing by chromosome, and achieves similar
+accuracy.}
 
 \item{trainChr}{which chromosome(s) to use for training.
 default = chr3 (approximately 1.5 million CpGs). Note that the more CpGs
@@ -28,8 +39,21 @@ default = chr22 (approximately 550,000 CpGs).}
 \item{testChr}{which chromosome(s) to use for testing.
 default = chr4 (approximately 1.4 million CpGs).}
 
+\item{trainSize}{integer of how many CpGs to use for train set. Default is
+1 million. NOTE: only kicks into effect when randomCpGs = TRUE.}
+
+\item{validateSize}{integer of how many CpGs to use for validation set.
+Default is 1 million. NOTE: only kicks into effect when randomCpGs = TRUE.}
+
+\item{testSize}{integer of how many CpGs to use for test set. Default is 1
+million. NOTE: only kicks into effect when randomCpGs = TRUE.}
+
 \item{minCov}{the minimum coverage required to consider a methylation
-value trainable, default is 10.}
+value trainable, default is 10 (i.e. 10 total reads at a CpG). Also used
+as the cutoff below which to impute and replace the methylation value, given
+that none of the features used for that CpG are NA. E.g. if a CpG has
+coverage of 2, but sampleAvg = TRUE and < 2 samples have coverage >=10 for
+that CpG, then that CpG's value will not be imputed and replaced.}
 
 \item{sampleAvg}{boolean of whether to not to include the sample average
 as a feature. Default is TRUE.}
@@ -48,7 +72,8 @@ e.g. list(chromState = "chromatinStates.bed")}
 }
 \value{
 a new bsseq object that has the imputed values (if imputeAndReplace
-is TRUE). Otherwise doesn't return anything; just prints RMSE (dry run).
+is TRUE). Otherwise doesn't return anything; just prints RMSE for each
+sample (dry run).
 }
 \description{
 Uses the \code{xgboost} framework (C) Tianqi Chen, Tong He, Michael Benesty,
