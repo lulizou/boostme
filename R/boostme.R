@@ -168,9 +168,13 @@ boostme <- function(bs,
                           early_stopping_round = 10,
                           verbose = 0,
                           silent = 1)
+    valPreds <- predict(my_model, data.matrix(myValidate[, -1]))
     testPreds <- predict(my_model, data.matrix(myTest[, -1]))
-    testRMSE <- sqrt(mean((myTest[, 1]-testPreds)^2))
-    message(paste(Sys.time(), "Overall Testing RMSE for", sampleNames(test)[i],
+    valRMSE <- sqrt(mean((myValidate[, 1] - valPreds)^2))
+    testRMSE <- sqrt(mean((myTest[, 1] - testPreds)^2))
+    message(paste(Sys.time(), "Validation RMSE for", sampleNames(test)[i],
+                  ":", testRMSE))
+    message(paste(Sys.time(), "Testing RMSE for", sampleNames(test)[i],
                   ":", testRMSE))
 
     if (imputeAndReplace) {
