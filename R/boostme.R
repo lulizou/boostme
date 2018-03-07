@@ -87,7 +87,7 @@ boostme <- function(bs,
   bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:22, sep=""))
 
   imputed <- getMeth(bs, type = "raw")
-  message(paste(Sys.time(), "Extracting positions from bs file"))
+  message(paste(Sys.time(), "Extracting positions from bs file (takes ~3min)"))
   rownames(imputed) <- as.character(granges(bs))
   for (i in 1:nrow(pData(bs))) { # Train a model for each sample
     # TODO: add in parallel option for this instead of loop
@@ -172,8 +172,8 @@ boostme <- function(bs,
     testPreds <- predict(my_model, data.matrix(myTest[, -1]))
     valRMSE <- sqrt(mean((myValidate[, 1] - valPreds)^2))
     testRMSE <- sqrt(mean((myTest[, 1] - testPreds)^2))
-    message(paste(Sys.time(), "Validation RMSE for", sampleNames(test)[i],
-                  ":", testRMSE))
+    message(paste(Sys.time(), "Validation RMSE for", sampleNames(validate)[i],
+                  ":", valRMSE))
     message(paste(Sys.time(), "Testing RMSE for", sampleNames(test)[i],
                   ":", testRMSE))
 
