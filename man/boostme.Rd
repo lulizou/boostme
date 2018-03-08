@@ -8,7 +8,7 @@ boostme(bs, imputeAndReplace = TRUE, randomCpGs = FALSE,
   trainChr = "chr1", validateChr = "chr22", testChr = "chr2",
   trainSize = 1e+06, validateSize = 1e+06, testSize = 1e+06,
   minCov = 10, sampleAvg = TRUE, neighbMeth = TRUE, neighbDist = TRUE,
-  featureBEDs = NULL, threads = 2)
+  featureBEDs = NULL, threads = 2, save = NULL)
 }
 \arguments{
 \item{bs}{a bsseq object containing the methylation & coverage values
@@ -71,7 +71,7 @@ e.g. list(chromState = "chromatinStates.bed")}
 \item{threads}{(optional) number of threads to use for training. default = 2}
 }
 \value{
-a new bsseq object that has the imputed values (if imputeAndReplace
+a data frame that has the imputed values (if imputeAndReplace
 is TRUE). Otherwise doesn't return anything; just prints RMSE for each
 sample (dry run).
 }

@@ -55,11 +55,14 @@
 #'
 #' @importClassesFrom bsseq BSseq
 #' @importMethodsFrom bsseq pData seqnames sampleNames start width
+#'
+#' @importFrom PRROC pr.curve roc.curve
 #' @importFrom dplyr bind_rows bind_cols
 #'
 #' @import bsseq
 #' @import GenomicRanges
 #' @import xgboost
+#' @import PRROC
 #'
 #' @export
 
@@ -77,24 +80,39 @@ boostme <- function(bs,
                     neighbMeth = TRUE,
                     neighbDist = TRUE,
                     featureBEDs = NULL,
-                    threads = 2) {
+                    threads = 2,
+                    save = NULL) {
   # checks
   stopifnot(class(bs) == "BSseq")
-  if (nrow(pData(bs)) < 3 & sampleAvg == TRUE)
+  if (nrow(pData(bs)) < 3 & sampleAvg == TRUE) {
     stop("At least 3 samples are needed to use the sample average feature")
+  }
+  if (is.null(save)) {
+    message(paste("Warning: Performance metrics will be reported but not",
+                  "saved; to save metrics, specify the save parameter, e.g.",
+                  "save = 'results.txt'"))
+  }
+
+  metrics <- data.frame(matrix(nrow = ncol(bs), ncol = 9))
+  colnames(metrics) <- c("sample",
+                         "rmse_val", "auroc_val", "auprc_val", "acc_val",
+                         "rmse_test", "auroc_test", "auprc_test", "acc_test")
 
   # only use the autosome
   bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:22, sep=""))
 
   imputed <- getMeth(bs, type = "raw")
-  message(paste(Sys.time(), "Extracting positions from bs file (takes ~3min)"))
+  message(paste(Sys.time(),
+                "Extracting positions from bs object (takes a bit)"))
   rownames(imputed) <- as.character(granges(bs))
   for (i in 1:nrow(pData(bs))) { # Train a model for each sample
     # TODO: add in parallel option for this instead of loop
-    message(paste(Sys.time(), "Training on", sampleNames(bs)[i]))
-    message(paste(Sys.time(), "Building features..."))
+    message(paste(Sys.time(), sampleNames(bs)[i]))
+    message(paste(Sys.time(), "... Building features"))
     if (randomCpGs) { # need to randomly sample and also make sure have
       # complete cases for the required amount of CpGs.
+      message(paste(Sys.time(), "... Using randomly selected CpGs for
+                    training, validation, and testing (takes a while)"))
       datSize <- 0
       targetSize <- trainSize + validateSize + testSize
       alreadySampled <- NULL # for making sure no overlapping sampling
@@ -118,8 +136,9 @@ boostme <- function(bs,
       myValidate <- myAll[(trainSize + 1):(trainSize + validateSize), ]
       myTest <- myAll[(trainSize + validateSize + 1):targetSize, ]
     } else {
-      message(paste(Sys.time(), "Using", trainChr, "for training,",
-                    validateChr, "for validation, and", testChr, "for testing..."))
+      message(paste(Sys.time(), "... Using", trainChr, "for training,",
+                    validateChr, "for validation, and", testChr,
+                    "for testing"))
       train <- chrSelectBSseq(bs, seqnames = trainChr)
       validate <- chrSelectBSseq(bs, seqnames = validateChr)
       test <- chrSelectBSseq(bs, seqnames = testChr)
@@ -159,7 +178,7 @@ boostme <- function(bs,
 
     # train the model
     watchlist <- list(train = dtrain, validate = dvalidate)
-    message(paste(Sys.time(), "Training the model..."))
+    message(paste(Sys.time(), "... Training the model"))
     my_model <- xgb.train(data = dtrain,
                           nthread = threads,
                           nrounds = 500,
@@ -172,22 +191,55 @@ boostme <- function(bs,
     testPreds <- predict(my_model, data.matrix(myTest[, -1]))
     valRMSE <- sqrt(mean((myValidate[, 1] - valPreds)^2))
     testRMSE <- sqrt(mean((myTest[, 1] - testPreds)^2))
-    message(paste(Sys.time(), "Validation RMSE for", sampleNames(validate)[i],
-                  ":", valRMSE))
-    message(paste(Sys.time(), "Testing RMSE for", sampleNames(test)[i],
-                  ":", testRMSE))
+
+    # metric calculation
+    valLabels <- ifelse(myValidate[, 1] >= 0.5, 1, 0)
+    testLabels <- ifelse(myTest[, 1] >= 0.5, 1, 0)
+    valFg <- valPreds[valLabels == 1]
+    valBg <- valPreds[valLabels == 0]
+    testFg <- testPreds[testLabels == 1]
+    testBg <- testPreds[testLabels == 0]
+    valROC <- roc.curve(scores.class0 = valFg, scores.class1 = valBg)
+    valPR <- pr.curve(scores.class0 = valFg, scores.class1 = valBg)
+    valAcc <- length(which(ifelse(valPreds >= 0.5, 1, 0) == valLabels))/
+                       length(valPreds)
+    testROC <- roc.curve(scores.class0 = testFg, scores.class1 = testBg)
+    testPR <- pr.curve(scores.class0 = testFg, scores.class1 = testBg)
+    testAcc <- length(which(ifelse(testPreds >= 0.5, 1, 0) == testLabels))/
+                        length(testPreds)
+    message(paste(Sys.time(), "...... Validation RMSE:",
+                  round(valRMSE, digits = 4)))
+    message(paste(Sys.time(), "...... Validation AUROC:",
+                  round(valROC$auc, digits = 4)))
+    message(paste(Sys.time(), "...... Validation AUPRC:",
+                  round(valPR$auc.integral, digits = 4)))
+    message(paste(Sys.time(), "...... Validation Accuracy:",
+                  round(valAcc, digits = 4)))
+    message(paste(Sys.time(), "...... Testing RMSE:",
+                  round(testRMSE, digits = 4)))
+    message(paste(Sys.time(), "...... Testing AUROC:",
+                  round(testROC$auc, digits = 4)))
+    message(paste(Sys.time(), "...... Testing AUPRC:",
+                  round(testPR$auc.integral, digits = 4)))
+    message(paste(Sys.time(), "...... Testing Accuracy:",
+                  round(testAcc, digits = 4)))
+    metrics[i, 1] <- sampleNames(bs)[i]
+    metrics[i, 2:ncol(metrics)] <-
+      c(valRMSE, valROC$auc, valPR$auc.integral, valAcc,
+        testRMSE, testROC$auc, testPR$auc.integral, testAcc)
 
     if (imputeAndReplace) {
       yCov <- as.vector(getCoverage(bs[, i]))
       replaceThese <- which(yCov < minCov)
-      message(paste(Sys.time(), length(replaceThese), "CpGs",
+      message(paste(Sys.time(), "...", length(replaceThese), "CpGs",
                     "out of", length(yCov), "(",
-                    length(replaceThese)/length(yCov), "%) in",
-                    sampleNames(bs)[i], "CpGs have minCov <", minCov))
+                    round(length(replaceThese)/length(yCov)*100, digits = 4),
+                    "% ) in", sampleNames(bs)[i], "have minCov <", minCov))
 
       # build features for all sites in the sample
-      message(paste(Sys.time(), "Constructing features for all sites in the sample
-                    (may take a while)"))
+      message(paste(Sys.time(),
+                    "...... Constructing features for all sites in the",
+                    "sample (may take a while)"))
       dat <- constructFeatures(bs, sample = i, minCov = minCov,
                                sampleAvg = sampleAvg,
                                neighbMeth = neighbMeth,
@@ -195,21 +247,29 @@ boostme <- function(bs,
                                featureBEDs = featureBEDs)
       enoughInfoToImpute <- replaceThese[which(
         complete.cases(dat[replaceThese, -1]))]
-      message(paste(Sys.time(), "Able to impute", length(enoughInfoToImpute),
-                    "out of", length(replaceThese)))
+      message(paste(Sys.time(), "...... Able to impute",
+                    length(enoughInfoToImpute),
+                    "out of", length(replaceThese), "(",
+                    round(length(enoughInfoToImpute)/length(replaceThese)*100,
+                          digits = 4),
+                    "% )"))
       dat <- dat[enoughInfoToImpute,]
       dat[] <- lapply(dat, as.numeric)
 
       # impute
-      message(paste(Sys.time(), "Imputing..."))
+      message(paste(Sys.time(), "...... Imputing"))
       imputedValues <- predict(my_model, data.matrix(dat[, -1]))
 
       # replace
-      message(paste(Sys.time(), "Replacing..."))
+      message(paste(Sys.time(), "...... Replacing"))
       newY <- getMeth(bs[, i], type = "raw")
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
     }
+  }
+  if (!is.null(save)) {
+    write.table(metrics, file = save, quote = F, sep = "\t", row.names = F)
+    message(paste(Sys.time(), "... Saved results to", save))
   }
   imputed
 }
