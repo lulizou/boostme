@@ -128,7 +128,11 @@ boostme <- function(bs,
                                    neighbMeth = neighbMeth,
                                    neighbDist = neighbDist,
                                    featureBEDs = featureBEDs)
-        myAll <- bind_rows(myAll, complete.cases(bigBS))
+        if (is.null(myAll)) {
+          myAll <- complete.cases(bigBS)
+        } else {
+          myAll <- bind_rows(myAll, complete.cases(bigBS))
+        }
         datSize <- nrow(myAll)
       }
       rm(bigBS)
