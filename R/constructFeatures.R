@@ -50,6 +50,9 @@ constructFeatures <- function(bs,
     # need to make a copy of the data 'cause bsseq doesn't allow NAs
     otherMeths <- getMeth(bs[, -sample], type = "raw")
     otherCovs <- getCoverage(bs[, -sample], type = "Cov")
+    if (class(otherMeths) == "DelayedMatrix") {
+      otherMeths <- as.matrix(otherMeths)
+    }
     otherMeths[which(otherCovs < minCov)] <- NA
     sampleAverage <- rowMeans(otherMeths, na.rm = T)
     features$sampleAvg <- sampleAverage
