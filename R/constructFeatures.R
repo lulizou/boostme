@@ -52,6 +52,7 @@ constructFeatures <- function(bs,
     otherCovs <- getCoverage(bs[, -sample], type = "Cov")
     if (class(otherMeths) == "DelayedMatrix") {
       otherMeths <- as.matrix(otherMeths)
+      otherCovs <- as.matrix(otherCovs)
     }
     otherMeths[which(otherCovs < minCov)] <- NA
     sampleAverage <- rowMeans(otherMeths, na.rm = T)
