@@ -255,7 +255,9 @@ boostme <- function(bs,
       imputedValues <- predict(my_model, data.matrix(dat[, -1]))
       imputedValues[imputedValues < 0] <- 0
       newY <- getMeth(bs[, i], type = "raw")
-      newY <- as.matrix(newY)
+      if (typeof(newY)=='S4') { # it becomes a DelayedArray for larger bs objects
+        newY <- as.vector(newY@seed)
+      }
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
     }

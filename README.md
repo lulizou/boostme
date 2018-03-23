@@ -12,8 +12,16 @@ Installation (requires R >= 3.4):
 ```
 devtools::install_github("lulizou/boostme")
 ```
-BoostMe accepts data input as a `bsseq` object, which you can learn more about
-[here](https://bioconductor.org/packages/release/bioc/html/bsseq.html). 
+BoostMe accepts data input WGBS data as a `bsseq` object, which you can learn more about [here](https://bioconductor.org/packages/release/bioc/html/bsseq.html). Highest accuracy is achieved when multiple samples are used, but imputation can still be done using only neighboring CpG information by setting `sampleAvg = FALSE`.
+
+## Example
+1. Make a dummy `bsseq` object with three samples
+```
+library(bsseq)
+data(BS.chr22)
+
+```
+
 
 ## More information
 
