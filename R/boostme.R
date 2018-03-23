@@ -255,7 +255,7 @@ boostme <- function(bs,
       imputedValues <- predict(my_model, data.matrix(dat[, -1]))
       imputedValues[imputedValues < 0] <- 0
       newY <- getMeth(bs[, i], type = "raw")
-      newY <- as.array(newY)
+      newY <- as.matrix(newY)
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
     }
