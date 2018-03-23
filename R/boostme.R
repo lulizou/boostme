@@ -257,7 +257,7 @@ boostme <- function(bs,
       imputedValues[imputedValues < 0] <- 0
       newY <- getMeth(bs[, i], type = "raw")
       print(str(newY))
-      newY <- DelayedArray::realize(newY)
+      newY <- DelayedArray::realize(newY)@seed
       print(str(newY))
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
