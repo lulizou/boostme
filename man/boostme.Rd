@@ -60,18 +60,22 @@ neighboring CpG methylation values. Default is TRUE.}
 \item{neighbDist}{boolean of whether or not to include nearest non-missing
 neighboring CpG distances. Default is TRUE.}
 
-\item{featureBEDs}{optional named list of paths to BED files to be included
-as features in the model. Names are used as the feature name;
-e.g. list(chromState = "chromatinStates.bed")}
+\item{featureBEDs}{optional vector of paths to BED files to be included
+as features in the model. All columns past the third column are
+automatically considered to be features. If the column has multiple factors
+(i.e. multiple different strings) then each factor is converted to its own
+binary feature (1 if present, else 0)}
 
 \item{threads}{(optional) number of threads to use for training. default = 2}
+
+\item{save}{(optional) file path to save metrics to (e.g. results.txt)}
 
 \item{impute}{boolean of whether or not to impute CpG methylation
 values below the minCov. Default is TRUE. Set to FALSE if want to do a dry
 run and see the RMSE for each sample.}
 }
 \value{
-a data frame that has the imputed values (if imputeAndReplace
+a matrix that has the imputed values (if imputeAndReplace
 is TRUE). Otherwise doesn't return anything; just prints RMSE for each
 sample (dry run).
 }

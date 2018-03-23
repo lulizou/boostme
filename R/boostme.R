@@ -57,15 +57,19 @@
 #' sample (dry run).
 #'
 #' @importClassesFrom bsseq BSseq
+#' @importClassesFrom DelayedArray DelayedArray
 #' @importMethodsFrom bsseq pData seqnames sampleNames start width
 #'
 #' @importFrom PRROC pr.curve roc.curve
 #' @importFrom dplyr bind_rows bind_cols sample_n
+#' @importFrom DelayedArray realize
 #'
+#' @import DelayedArray
 #' @import bsseq
 #' @import GenomicRanges
 #' @import xgboost
 #' @import PRROC
+#'
 #'
 #' @export
 
@@ -254,9 +258,11 @@ boostme <- function(bs,
       message(paste(Sys.time(), "...... Imputing"))
       imputedValues <- predict(my_model, data.matrix(dat[, -1]))
       imputedValues[imputedValues < 0] <- 0
-      newY <- getMeth(bs[, i], type = "raw")
-      if (typeof(newY)=='S4') { # it becomes a DelayedArray for larger bs objects
-        newY <- as.vector(newY@seed)
+      newY <- getMeth(bs[, i], type = "raw") # returns DelayedArray for large bs
+      print(str(newY))
+      if (typeof(newY)=='S4') {
+        print(str(as.data.frame(newY@seed)))
+        newY <- as.data.frame(newY@seed)[, 1]
       }
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
