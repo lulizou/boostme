@@ -253,13 +253,12 @@ boostme <- function(bs,
       # impute
       message(paste(Sys.time(), "...... Imputing"))
       imputedValues <- predict(my_model, data.matrix(dat[, -1]))
-      message("hi")
       imputedValues[imputedValues < 0] <- 0
-      message("i'm")
       newY <- getMeth(bs[, i], type = "raw")
-      message("testing")
+      print(str(newY))
+      newY <- realize(newY)
+      print(str(newY))
       newY[enoughInfoToImpute] <- imputedValues
-      message("this")
       imputed[, i] <- newY
     }
   }
