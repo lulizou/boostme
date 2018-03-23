@@ -264,7 +264,7 @@ boostme <- function(bs,
       print(str(newY))
       if (typeof(newY)=='S4') {
         print(str(as.data.frame(realize(newY)@seed)))
-        newY <- as.data.frame(realize(newY@)seed)[, 1]
+        newY <- as.data.frame(realize(newY)@seed)[, 1]
       }
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
