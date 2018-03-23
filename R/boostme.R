@@ -57,8 +57,9 @@
 #' sample (dry run).
 #'
 #' @importClassesFrom bsseq BSseq
-#' @importClassesFrom DelayedArray DelayedArray
+#' @importClassesFrom DelayedArray DelayedArray DelayedMatrix
 #' @importMethodsFrom bsseq pData seqnames sampleNames start width
+#' @importMethodsFrom S4Vectors as.data.frame
 #'
 #' @importFrom PRROC pr.curve roc.curve
 #' @importFrom dplyr bind_rows bind_cols sample_n
@@ -69,6 +70,7 @@
 #' @import GenomicRanges
 #' @import xgboost
 #' @import PRROC
+#' @import S4Vectors
 #'
 #'
 #' @export
