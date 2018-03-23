@@ -61,6 +61,7 @@
 #'
 #' @importFrom PRROC pr.curve roc.curve
 #' @importFrom dplyr bind_rows bind_cols sample_n
+#' @importFrom DelayedMatrix realize
 #'
 #' @import bsseq
 #' @import GenomicRanges
@@ -256,7 +257,7 @@ boostme <- function(bs,
       imputedValues[imputedValues < 0] <- 0
       newY <- getMeth(bs[, i], type = "raw")
       print(str(newY))
-      newY <- realize(newY)
+      newY <- DelayedMatrix::realize(newY)
       print(str(newY))
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY
