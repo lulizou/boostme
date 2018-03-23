@@ -82,5 +82,7 @@ constructFeatures <- function(bs,
     }
   }
   dat <- bind_cols(data.frame(y = y), features)
+  dat <- dat[, -which(names(dat) %in% c("seqnames", "start", "end", "width",
+                                        "strand"))]
   dat
 }

@@ -16,10 +16,6 @@ as well as the features loaded into \code{pData(bs)}. If no features
 are loaded into \code{pData(bs)}, the model will simply use neighboring
 CpGs and the sample average of the other CpGs.}
 
-\item{imputeAndReplace}{boolean of whether or not to impute and replace
-CpG methylation values below the minCov. Default is TRUE. Set to FALSE if
-want to do a dry run and see the RMSE for each sample.}
-
 \item{randomCpGs}{boolean of whether or not to select a simple random
 sample of CpGs genome-wide or not. Default is FALSE. If TRUE, will ignore
 the trainChr, validateChr, and testChr parameters and select CpGs for the
@@ -69,6 +65,10 @@ as features in the model. Names are used as the feature name;
 e.g. list(chromState = "chromatinStates.bed")}
 
 \item{threads}{(optional) number of threads to use for training. default = 2}
+
+\item{impute}{boolean of whether or not to impute CpG methylation
+values below the minCov. Default is TRUE. Set to FALSE if want to do a dry
+run and see the RMSE for each sample.}
 }
 \value{
 a data frame that has the imputed values (if imputeAndReplace

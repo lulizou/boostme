@@ -9,9 +9,9 @@
 #' as well as the features loaded into \code{pData(bs)}. If no features
 #' are loaded into \code{pData(bs)}, the model will simply use neighboring
 #' CpGs and the sample average of the other CpGs.
-#' @param imputeAndReplace boolean of whether or not to impute and replace
-#' CpG methylation values below the minCov. Default is TRUE. Set to FALSE if
-#' want to do a dry run and see the RMSE for each sample.
+#' @param impute boolean of whether or not to impute CpG methylation
+#' values below the minCov. Default is TRUE. Set to FALSE if want to do a dry
+#' run and see the RMSE for each sample.
 #' @param randomCpGs boolean of whether or not to select a simple random
 #' sample of CpGs genome-wide or not. Default is FALSE. If TRUE, will ignore
 #' the trainChr, validateChr, and testChr parameters and select CpGs for the
@@ -45,11 +45,14 @@
 #' neighboring CpG methylation values. Default is TRUE.
 #' @param neighbDist boolean of whether or not to include nearest non-missing
 #' neighboring CpG distances. Default is TRUE.
-#' @param featureBEDs optional named list of paths to BED files to be included
-#' as features in the model. Names are used as the feature name;
-#' e.g. list(chromState = "chromatinStates.bed")
+#' @param featureBEDs optional vector of paths to BED files to be included
+#' as features in the model. All columns past the third column are
+#' automatically considered to be features. If the column has multiple factors
+#' (i.e. multiple different strings) then each factor is converted to its own
+#' binary feature (1 if present, else 0)
 #' @param threads (optional) number of threads to use for training. default = 2
-#' @return a data frame that has the imputed values (if imputeAndReplace
+#' @param save (optional) file path to save metrics to (e.g. results.txt)
+#' @return a matrix that has the imputed values (if imputeAndReplace
 #' is TRUE). Otherwise doesn't return anything; just prints RMSE for each
 #' sample (dry run).
 #'
@@ -57,7 +60,7 @@
 #' @importMethodsFrom bsseq pData seqnames sampleNames start width
 #'
 #' @importFrom PRROC pr.curve roc.curve
-#' @importFrom dplyr bind_rows bind_cols
+#' @importFrom dplyr bind_rows bind_cols sample_n
 #'
 #' @import bsseq
 #' @import GenomicRanges
@@ -106,39 +109,25 @@ boostme <- function(bs,
                 "Extracting positions from bs object (takes a bit)"))
   rownames(imputed) <- as.character(granges(bs))
   for (i in 1:nrow(pData(bs))) { # Train a model for each sample
-    # TODO: add in parallel option for this instead of loop
+    # TODO: add in parallel option for this instead of loop (?)
     message(paste(Sys.time(), sampleNames(bs)[i]))
     message(paste(Sys.time(), "... Building features"))
     if (randomCpGs) { # need to randomly sample and also make sure have
       # complete cases for the required amount of CpGs.
-      message(paste(Sys.time(), "... Using randomly selected CpGs for
-                    training, validation, and testing (takes a while)"))
-      datSize <- 0
+      message(paste(Sys.time(), "... Randomly selecting CpGs for",
+                    "training, validation, and testing"))
       targetSize <- trainSize + validateSize + testSize
-      alreadySampled <- NULL # for making sure no overlapping sampling
-      myAll <- NULL
-      l <- c(1:length(bs))
-      while (datSize < targetSize) {
-        sampleRows <- sample(l[!l %in% alreadySampled],
-                             size = (targetSize - datSize))
-        alreadySampled <- append(alreadySampled, sampleRows)
-        bigBS <- bs[sampleRows, ]
-        bigBS <- constructFeatures(bigBS, sample = i, minCov = minCov,
-                                   sampleAvg = sampleAvg,
-                                   neighbMeth = neighbMeth,
-                                   neighbDist = neighbDist,
-                                   featureBEDs = featureBEDs)
-        if (is.null(myAll)) {
-          myAll <- complete.cases(bigBS)
-        } else {
-          myAll <- bind_rows(myAll, complete.cases(bigBS))
-        }
-        datSize <- nrow(myAll)
-      }
+      bigBS <- constructFeatures(bs, sample = i, minCov = minCov,
+                               sampleAvg = sampleAvg,
+                               neighbMeth = neighbMeth,
+                               neighbDist = neighbDist,
+                               featureBEDs = featureBEDs)
+      bigBS <- bigBS[complete.cases(bigBS), ]
+      bigBS <- sample_n(bigBS, targetSize)
+      myTrain <- bigBS[1:trainSize, ]
+      myValidate <- bigBS[(trainSize + 1):(trainSize + validateSize), ]
+      myTest <- bigBS[(trainSize + validateSize + 1):targetSize, ]
       rm(bigBS)
-      myTrain <- myAll[1:trainSize, ]
-      myValidate <- myAll[(trainSize + 1):(trainSize + validateSize), ]
-      myTest <- myAll[(trainSize + validateSize + 1):targetSize, ]
     } else {
       message(paste(Sys.time(), "... Using", trainChr, "for training,",
                     validateChr, "for validation, and", testChr,
@@ -167,6 +156,7 @@ boostme <- function(bs,
       myValidate <- myValidate[complete.cases(myValidate), ]
       myTest <- myTest[complete.cases(myTest), ]
     }
+    print(str(myTrain))
 
     # convert data frames to xgboost-ready matrices
     myTrain[] <- lapply(myTrain, as.numeric)
@@ -263,9 +253,7 @@ boostme <- function(bs,
       # impute
       message(paste(Sys.time(), "...... Imputing"))
       imputedValues <- predict(my_model, data.matrix(dat[, -1]))
-
-      # replace
-      message(paste(Sys.time(), "...... Replacing"))
+      imputedValues[imputedValues < 0] <- 0
       newY <- getMeth(bs[, i], type = "raw")
       newY[enoughInfoToImpute] <- imputedValues
       imputed[, i] <- newY

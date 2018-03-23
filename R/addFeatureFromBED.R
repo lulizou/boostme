@@ -15,10 +15,12 @@
 #' the BED file as the last column(s)
 #'
 #' @importClassesFrom bsseq BSseq
+#' @importClassesFrom S4Vectors Hits
 #' @importMethodsFrom bsseq pData seqnames sampleNames start width
 #'
 #' @import bsseq
 #' @import GenomicRanges
+#' @import S4Vectors
 #'
 #' @export
 
@@ -27,6 +29,7 @@ addFeatureFromBED <- function(features,
                               ranges,
                               featureName = NULL,
                               file = NULL) {
+  # checks
   if (is.null(file)) {
     stop("Must specify the BED file to add using the file param")
   }
@@ -34,15 +37,19 @@ addFeatureFromBED <- function(features,
     stop("Ranges are not the same length as the features data frame = bad")
   }
   dat <- read.table(file, header = F, sep = "\t")
+  if (ncol(dat) <= 3) {
+    stop(paste("BED file", file, "does not have > 3 columns."))
+  }
   colnames(dat)[1:3] <- c("chr", "start", "end")
-  colnames(dat)[4] <- featureName
   dat$start <- dat$start + 1 # make sure in same coordinates
-  grl <- split(makeGRangesFromDataFrame(dat), dat[,4])
-  for (i in 1:length(grl)) {
-    overlaps <- findOverlaps(ranges, grl[i])
-    eval(parse(text = paste0("features$`", names(grl)[i], "` <- 0")))
-    eval(parse(text = paste0("features$`", names(grl)[i],
-                            "`[queryHits(overlaps)] <- 1")))
+  for (i in 4:ncol(dat)) {
+    grl <- split(makeGRangesFromDataFrame(dat), dat[, i])
+    for (j in 1:length(grl)) {
+      overlaps <- findOverlaps(ranges, grl[j])
+      eval(parse(text = paste0("features$`", names(grl)[j], "` <- 0")))
+      eval(parse(text = paste0("features$`", names(grl)[j],
+                               "`[queryHits(overlaps)] <- 1")))
+    }
   }
   features
 }
