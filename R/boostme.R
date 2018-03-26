@@ -297,6 +297,7 @@ boostme <- function(bs,
       print(summary(imputedValues))
       newY[enoughInfoToImpute] <- imputedValues
       print("did this work")
+      print(str(imputed))
       imputed[, i] <- newY
       print("or this")
     }
