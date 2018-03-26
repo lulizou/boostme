@@ -292,17 +292,8 @@ boostme <- function(bs,
       if (typeof(newY)=='S4') {
         newY <- as.data.frame(realize(newY)@seed)[, 1]
       }
-      print(str(newY))
-      print(summary(newY))
-      print(str(enoughInfoToImpute))
-      print(summary(enoughInfoToImpute))
-      print(str(imputedValues))
-      print(summary(imputedValues))
       newY[enoughInfoToImpute] <- imputedValues
-      print("did this work")
-      print(str(imputed))
       imputed[, i] <- newY
-      print("or this")
     }
   }
   if (!is.null(save)) {
