@@ -117,7 +117,7 @@ boostme <- function(bs,
 
   imputed <- getMeth(bs, type = "raw")
   if (typeof(imputed)=='S4') {
-    imputed <- as.data.frame(realize(newY)@seed)
+    imputed <- as.data.frame(realize(imputed)@seed)
   }
   if (verbose) {
     message(paste(Sys.time(),
