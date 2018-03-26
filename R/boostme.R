@@ -116,6 +116,9 @@ boostme <- function(bs,
   bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:22, sep=""))
 
   imputed <- getMeth(bs, type = "raw")
+  if (typeof(imputed)=='S4') {
+    imputed <- as.data.frame(realize(newY)@seed)
+  }
   if (verbose) {
     message(paste(Sys.time(),
                   "Extracting positions from bs object (takes a bit)"))
