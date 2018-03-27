@@ -19,10 +19,9 @@ performanceMetrics <- function(pred, actual) {
   actualBinary <- ifelse(actual >= 0.5, 1, 0)
   fg <- pred[actualBinary == 1]
   bg <- pred[actualBinary == 0]
-  roc <- roc.curve(scores.class0 = fg, scores.class1 = bg)
-  pr <- pr.curve(scores.class0 = fg, scores.class1 = bg)
-  accuracy <- length(which(ifelse(pred >= 0.5, 1, 0) == actualBinary))/
+  auroc <- roc.curve(scores.class0 = fg, scores.class1 = bg)
+  auprc <- pr.curve(scores.class0 = fg, scores.class1 = bg)
+  acc <- length(which(ifelse(pred >= 0.5, 1, 0) == actualBinary))/
     length(pred)
-
-  list(rmse = rmse)
+  list(rmse = rmse, auroc = auroc$auc, auprc = auprc$auc.integral, acc = acc)
 }

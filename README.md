@@ -2,7 +2,7 @@
 
 BoostMe is a machine learning method for imputing the continuous methylation
 values of CpGs sequenced at low coverage within whole-genome bisulfite
-sequencing data (WGBS). BoostMe relies crucially on XGBoost, a previously
+sequencing data (WGBS). BoostMe relies on [XGBoost](https://github.com/dmlc/xgboost), a previously
 developed gradient boosting machine learning algorithm, and the availability of
 multiple samples to achieve both higher accuracy and faster runtimes than
 previously reported methods.

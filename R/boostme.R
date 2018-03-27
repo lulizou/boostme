@@ -210,46 +210,32 @@ boostme <- function(bs,
                           silent = 1)
     valPreds <- predict(my_model, data.matrix(myValidate[, -1]))
     testPreds <- predict(my_model, data.matrix(myTest[, -1]))
-    valRMSE <- sqrt(mean((myValidate[, 1] - valPreds)^2))
-    testRMSE <- sqrt(mean((myTest[, 1] - testPreds)^2))
 
-    # metric calculation
-    valLabels <- ifelse(myValidate[, 1] >= 0.5, 1, 0)
-    testLabels <- ifelse(myTest[, 1] >= 0.5, 1, 0)
-    valFg <- valPreds[valLabels == 1]
-    valBg <- valPreds[valLabels == 0]
-    testFg <- testPreds[testLabels == 1]
-    testBg <- testPreds[testLabels == 0]
-    valROC <- roc.curve(scores.class0 = valFg, scores.class1 = valBg)
-    valPR <- pr.curve(scores.class0 = valFg, scores.class1 = valBg)
-    valAcc <- length(which(ifelse(valPreds >= 0.5, 1, 0) == valLabels))/
-                       length(valPreds)
-    testROC <- roc.curve(scores.class0 = testFg, scores.class1 = testBg)
-    testPR <- pr.curve(scores.class0 = testFg, scores.class1 = testBg)
-    testAcc <- length(which(ifelse(testPreds >= 0.5, 1, 0) == testLabels))/
-                        length(testPreds)
+    valMetrics <- performanceMetrics(valPreds, myValidate[, 1])
+    testMetrics <- performanceMetrics(testPreds, myTest[, 1])
+
     if (verbose) {
       message(paste(Sys.time(), "...... Validation RMSE:",
-                    round(valRMSE, digits = 4)))
+                    round(valMetrics$rmse, digits = 4)))
       message(paste(Sys.time(), "...... Validation AUROC:",
-                    round(valROC$auc, digits = 4)))
+                    round(valMetrics$auroc, digits = 4)))
       message(paste(Sys.time(), "...... Validation AUPRC:",
-                    round(valPR$auc.integral, digits = 4)))
+                    round(valMetrics$auprc, digits = 4)))
       message(paste(Sys.time(), "...... Validation Accuracy:",
-                    round(valAcc, digits = 4)))
+                    round(valMetrics$acc, digits = 4)))
       message(paste(Sys.time(), "...... Testing RMSE:",
-                    round(testRMSE, digits = 4)))
+                    round(testMetrics$rmse, digits = 4)))
       message(paste(Sys.time(), "...... Testing AUROC:",
-                    round(testROC$auc, digits = 4)))
+                    round(testMetrics$auroc, digits = 4)))
       message(paste(Sys.time(), "...... Testing AUPRC:",
-                    round(testPR$auc.integral, digits = 4)))
+                    round(testMetrics$auprc, digits = 4)))
       message(paste(Sys.time(), "...... Testing Accuracy:",
-                    round(testAcc, digits = 4)))
+                    round(testMetrics$acc, digits = 4)))
     }
     metrics[i, 1] <- sampleNames(bs)[i]
     metrics[i, 2:ncol(metrics)] <-
-      c(valRMSE, valROC$auc, valPR$auc.integral, valAcc,
-        testRMSE, testROC$auc, testPR$auc.integral, testAcc)
+      c(valMetrics$rmse, valMetrics$auroc, valMetrics$auprc, valMetrics$acc,
+        testMetrics$rmse, testMetrics$auroc, testMetrics$auprc, testMetrics$acc)
 
     if (imputeAndReplace) {
       yCov <- as.vector(getCoverage(bs[, i]))
