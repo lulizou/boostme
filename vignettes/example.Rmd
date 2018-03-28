@@ -1,0 +1,10 @@
+---
+output: rmarkdown::html_vignette
+author: "Luli Zou"
+title: BoostMe
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+

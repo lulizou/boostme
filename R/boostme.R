@@ -46,10 +46,11 @@
 #' @param neighbDist logical value of whether or not to include nearest non-
 #' missing neighboring CpG distances. Default is TRUE.
 #' @param featureBEDs optional vector of paths to BED files to be included
-#' as features in the model. All columns past the third column are
-#' automatically considered to be features. If the column has multiple factors
-#' (i.e. multiple different strings) then each factor is converted to its own
-#' binary feature (1 if present, else 0)
+#' as features in the model. If the file only has 3 columns, assumes that the
+#' file is just one feature. If the file has 4 columns, 4th column is considered
+#' to be the feature(s). If the 4th column has multiple factors (i.e. multiple
+#' different strings) then each factor is converted to its own binary feature
+#' (1 if present, else 0).. Ignores all columns past the 4th.
 #' @param threads (optional) number of threads to use for training. default = 2
 #' @param save (optional) file path to save metrics to (e.g. results.txt)
 #' @param verbose logical value of whether to print status messages. Default is
