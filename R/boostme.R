@@ -13,13 +13,11 @@
 #' values below the minCov. Default is TRUE. Set to FALSE if want to do a dry
 #' run and see the RMSE for each sample.
 #' @param randomCpGs logical value of whether or not to select a simple random
-#' sample of CpGs genome-wide or not. Default is FALSE. If TRUE, will ignore
-#' the trainChr, validateChr, and testChr parameters and select CpGs for the
+#' sample of CpGs genome-wide or not. If TRUE, will ignore the trainChr,
+#' validateChr, and testChr parameters and select CpGs for the
 #' training, validation, and test sets at random. Can modify how large
 #' each of these sets will be individually using the trainSize, validateSize,
-#' and testSize parameters. Defaults are 1 million CpGs each. NOTE: this takes
-#' way longer to do than simply dividing by chromosome, and achieves similar
-#' accuracy.
+#' and testSize parameters. Defaults are 1 million CpGs each. Default is TRUE.
 #' @param trainChr which chromosome(s) to use for training.
 #' default = chr3 (approximately 1.5 million CpGs). Note that the more CpGs
 #' used for training, the more memory required to train and store the model.
@@ -50,14 +48,15 @@
 #' file is just one feature. If the file has 4 columns, 4th column is considered
 #' to be the feature(s). If the 4th column has multiple factors (i.e. multiple
 #' different strings) then each factor is converted to its own binary feature
-#' (1 if present, else 0). Ignores all columns past the 4th.
+#' (1 if present, else 0). Ignores all columns past the 4th. Ranges must be
+#' non-overlapping (can be solved with \code{bedtools merge} or separating into
+#' multiple BED files).
 #' @param threads (optional) number of threads to use for training. default = 2
 #' @param save (optional) file path to save metrics to (e.g. results.txt)
 #' @param verbose logical value of whether to print status messages. Default is
 #' TRUE.
-#' @return a matrix that has the imputed values (if imputeAndReplace
-#' is TRUE). Otherwise doesn't return anything; just prints RMSE for each
-#' sample (dry run).
+#' @return a matrix that has the imputed values (if impute is TRUE). Otherwise
+#' doesn't return anything; just prints RMSE for each sample (dry run).
 #'
 #' @importClassesFrom bsseq BSseq
 #' @importClassesFrom DelayedArray DelayedArray DelayedMatrix
@@ -79,8 +78,8 @@
 #' @export
 
 boostme <- function(bs,
-                    imputeAndReplace = TRUE,
-                    randomCpGs = FALSE,
+                    impute = TRUE,
+                    randomCpGs = TRUE,
                     trainChr = "chr1",
                     validateChr = "chr22",
                     testChr = "chr2",
@@ -238,7 +237,7 @@ boostme <- function(bs,
       c(valMetrics$rmse, valMetrics$auroc, valMetrics$auprc, valMetrics$acc,
         testMetrics$rmse, testMetrics$auroc, testMetrics$auprc, testMetrics$acc)
 
-    if (imputeAndReplace) {
+    if (impute) {
       yCov <- as.vector(getCoverage(bs[, i]))
       replaceThese <- which(yCov < minCov)
       if (verbose) {

@@ -7,3 +7,47 @@ vignette: >
   %\VignetteIndexEntry{Example}
   %\VignetteEncoding{UTF-8}
 ---
+
+This vignette is a work in progress!
+
+# Quick start
+
+Make a dummy `BSseq` object with 3 samples using example CpG positions from 
+chromosome 22. `cov` is the total number of reads at a CpG; `meth` is the
+total number of methylated reads at a CpG.
+
+```{r}
+suppressPackageStartupMessages(library(bsseq))
+library(boostme)
+data(chr22)
+cov <- matrix(data = rnorm(n = length(chr22)*3,
+                                      mean = 30,
+                                      sd = 26),
+              nrow = length(chr22),
+              ncol = 3)
+cov[cov < 0] <- 0
+meth <- matrix(data = rbeta(n = length(chr22)*3,
+                                    shape1 = 0.5,
+                                    shape2 = 0.5),
+               nrow = length(chr22),
+               ncol = 3) * cov
+bs <- BSseq(M = meth, Cov = cov, gr = chr22, sampleNames = c("s1", "s2", "s3"))
+```
+
+Now with a `BSseq` object, we can use BoostMe to impute beta values at CpGs with
+total coverage below a user-specified depth (default is 10x). We assign the
+imputation result to a new variable, `b`. 
+
+BoostMe trains and imputes on each sample individually. Evaluation metrics 
+including RMSE, AUROC, AUPRC, and accuracy can be saved to a .txt file using 
+the `save` parameter. The default training, validation, and testing sizes are 1 
+million. Since we have much less data in this example, we set those manually.
+
+```{r}
+b <- boostme(bs,
+        trainSize = 100000,
+        validateSize = 100000,
+        testSize = 100000)
+```
+
+The evaluation metrics are pretty bad, since this is dummy data!
