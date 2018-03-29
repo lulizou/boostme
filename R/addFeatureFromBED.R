@@ -51,15 +51,13 @@ addFeatureFromBED <- function(features,
   }
   colnames(dat)[1:3] <- c("chr", "start", "end")
   dat$start <- dat$start + 1 # make sure in same coordinates
-  if (ncol(dat) == 4) {
-    for (i in 4:ncol(dat)) {
-      grl <- split(makeGRangesFromDataFrame(dat), dat[, i])
-      for (j in 1:length(grl)) {
-        overlaps <- findOverlaps(ranges, grl[j])
-        eval(parse(text = paste0("features$`", names(grl)[j], "` <- 0")))
-        eval(parse(text = paste0("features$`", names(grl)[j],
-                                 "`[queryHits(overlaps)] <- 1")))
-      }
+  if (ncol(dat) >= 4) {
+    grl <- split(makeGRangesFromDataFrame(dat), dat[, 4])
+    for (j in 1:length(grl)) {
+      overlaps <- findOverlaps(ranges, grl[j])
+      eval(parse(text = paste0("features$`", names(grl)[j], "` <- 0")))
+      eval(parse(text = paste0("features$`", names(grl)[j],
+                               "`[queryHits(overlaps)] <- 1")))
     }
   } else { # if the file only has 3 columns, assume that it's one feature
     # without multiple factors and use the name of the file as the feature name
