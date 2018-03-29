@@ -58,6 +58,8 @@ addFeatureFromBED <- function(features,
     eval(parse(text = paste0("features$`", basename(file), "` <- 0")))
     eval(parse(text = paste0("features$`", basename(file),
                              "`[queryHits(overlaps)] <- 1")))
+    eval(parse(text = paste0("features$`", basename(file), "` <- ",
+                             "as.factor(features$`", basename(file), "`)")))
   } else {
     if (is.factor(dat[, 4])) { # multiple factors = make each factor a binary
       # feature
@@ -67,6 +69,8 @@ addFeatureFromBED <- function(features,
         eval(parse(text = paste0("features$`", names(grl)[j], "` <- 0")))
         eval(parse(text = paste0("features$`", names(grl)[j],
                                  "`[queryHits(overlaps)] <- 1")))
+        eval(parse(text = paste0("features$`", names(grl)[j], "` <- ",
+                                 "as.factor(features$`", names(grl[j]), "`)")))
       }
     } else if (is.numeric(dat[, 4]) | is.integer(dat[, 4])) {
       # numeric or integer = make one feature w/ the numeric/int value

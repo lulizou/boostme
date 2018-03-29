@@ -14,6 +14,10 @@ devtools::install_github("lulizou/boostme")
 ```
 BoostMe accepts data input WGBS data as a `bsseq` object, which you can learn more about [here](https://bioconductor.org/packages/release/bioc/html/bsseq.html). Highest accuracy is achieved when multiple samples (at least 3) are used, but if you want, imputation can still be done using only neighboring CpG information by setting `sampleAvg = FALSE`.
 
+## Example
+
+See [vignette](https://github.com/lulizou/boostme/blob/master/vignettes/example.Rmd) for an example using dummy data.
+
 
 ## More information
 
