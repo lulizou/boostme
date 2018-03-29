@@ -50,7 +50,7 @@
 #' file is just one feature. If the file has 4 columns, 4th column is considered
 #' to be the feature(s). If the 4th column has multiple factors (i.e. multiple
 #' different strings) then each factor is converted to its own binary feature
-#' (1 if present, else 0).. Ignores all columns past the 4th.
+#' (1 if present, else 0). Ignores all columns past the 4th.
 #' @param threads (optional) number of threads to use for training. default = 2
 #' @param save (optional) file path to save metrics to (e.g. results.txt)
 #' @param verbose logical value of whether to print status messages. Default is

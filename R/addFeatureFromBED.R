@@ -47,25 +47,36 @@ addFeatureFromBED <- function(features,
   }
   if (ncol(dat) > 4) {
     message(paste("Warning: there are more than 4 columns in", file,
-                  "so ignoring everything after the 4th column."))
+                  "; ignoring everything after the 4th column."))
   }
   colnames(dat)[1:3] <- c("chr", "start", "end")
   dat$start <- dat$start + 1 # make sure in same coordinates
-  if (ncol(dat) >= 4) {
-    grl <- split(makeGRangesFromDataFrame(dat), dat[, 4])
-    for (j in 1:length(grl)) {
-      overlaps <- findOverlaps(ranges, grl[j])
-      eval(parse(text = paste0("features$`", names(grl)[j], "` <- 0")))
-      eval(parse(text = paste0("features$`", names(grl)[j],
-                               "`[queryHits(overlaps)] <- 1")))
-    }
-  } else { # if the file only has 3 columns, assume that it's one feature
-    # without multiple factors and use the name of the file as the feature name
+
+  if (ncol(dat) == 3) { # 3 columns = assume 1 feature, name it after file
     grl <- makeGRangesFromDataFrame(dat)
     overlaps <- findOverlaps(ranges, grl)
     eval(parse(text = paste0("features$`", basename(file), "` <- 0")))
     eval(parse(text = paste0("features$`", basename(file),
                              "`[queryHits(overlaps)] <- 1")))
+  } else {
+    if (is.factor(dat[, 4])) { # multiple factors = make each factor a binary
+      # feature
+      grl <- split(makeGRangesFromDataFrame(dat), dat[, 4])
+      for (j in 1:length(grl)) {
+        overlaps <- findOverlaps(ranges, grl[j])
+        eval(parse(text = paste0("features$`", names(grl)[j], "` <- 0")))
+        eval(parse(text = paste0("features$`", names(grl)[j],
+                                 "`[queryHits(overlaps)] <- 1")))
+      }
+    } else if (is.numeric(dat[, 4]) | is.integer(dat[, 4])) {
+      # numeric or integer = make one feature w/ the numeric/int value
+        grl <- makeGRangesFromDataFrame(dat)
+        overlaps <- findOverlaps(ranges, grl)
+        eval(parse(text = paste0("features$`", basename(file), "` <- 0")))
+        eval(parse(text = paste0("features$`", basename(file),
+                                 "`[queryHits(overlaps)] <- ",
+                                 "dat[subjectHits(overlaps), 4]")))
+    }
   }
 
   features
