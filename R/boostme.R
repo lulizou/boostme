@@ -92,6 +92,7 @@ boostme <- function(bs,
                     neighbDist = TRUE,
                     featureBEDs = NULL,
                     threads = 2,
+                    seed = 1,
                     save = NULL,
                     verbose = TRUE) {
   # checks
@@ -144,6 +145,7 @@ boostme <- function(bs,
                                neighbDist = neighbDist,
                                featureBEDs = featureBEDs)
       bigBS <- bigBS[complete.cases(bigBS), ]
+      set.seed(seed)
       bigBS <- sample_n(bigBS, targetSize)
       myTrain <- bigBS[1:trainSize, ]
       myValidate <- bigBS[(trainSize + 1):(trainSize + validateSize), ]
