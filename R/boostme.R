@@ -51,6 +51,8 @@
 #' (1 if present, else 0). Ignores all columns past the 4th. Ranges must be
 #' non-overlapping (can be solved with \code{bedtools merge} or separating into
 #' multiple BED files).
+#' @param seed optional integer random seed used before selecting random CpGs
+#' for training/validation/testing.
 #' @param threads (optional) number of threads to use for training. default = 2
 #' @param save (optional) file path to save metrics to (e.g. results.txt)
 #' @param verbose logical value of whether to print status messages. Default is

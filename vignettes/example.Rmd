@@ -8,8 +8,6 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-This vignette is a work in progress!
-
 # Example
 
 Make a dummy `BSseq` object with 3 samples using example CpG positions from 
@@ -17,20 +15,20 @@ chromosome 22. `cov` is the total number of reads at a CpG; `meth` is the
 total number of methylated reads at a CpG.
 
 ```{r}
-suppressPackageStartupMessages(library(bsseq))
+library(bsseq)
 library(boostme)
 data(chr22)
-cov <- matrix(data = rnorm(n = length(chr22)*3,
+cov <- matrix(data = round(rnorm(n = length(chr22)*3,
                                       mean = 30,
-                                      sd = 26),
+                                      sd = 26)),
               nrow = length(chr22),
               ncol = 3)
 cov[cov < 0] <- 0
-meth <- matrix(data = rbeta(n = length(chr22)*3,
+meth <- round(matrix(data = rbeta(n = length(chr22)*3,
                                     shape1 = 0.5,
                                     shape2 = 0.5),
                nrow = length(chr22),
-               ncol = 3) * cov
+               ncol = 3) * cov)
 bs <- BSseq(M = meth, Cov = cov, gr = chr22, sampleNames = c("s1", "s2", "s3"))
 ```
 
@@ -55,7 +53,35 @@ b <- boostme(bs,
              testSize = 100000)
 ```
 
-The evaluation metrics are pretty bad, since this is dummy data!
+The evaluation metrics are pretty bad, since this is dummy data! (For a quieter version, you can set `verbose=F`)
+
+# Adding features, e.g. GENCODE annotations
+
+In my experiments, I found that adding in other genomic features such as tissue-specific ATAC-seq, GENCODE annotations, chromatin states, etc. only improved performance very modestly (i.e. non-significantly). Neighboring information and average beta value across samples seem to explain most of the signal. However, it's possible this result could be different depending on what tissue/disease state your data is from, or if you have a really good feature.
+
+This example will look at how to incorporate GENCODE annotations as features. BoostMe accepts features in BED format; features not in BED format require a bit
+of wrangling. First, you can get the GENCODE annotation file by downloading it at https://www.gencodegenes.org/releases/current.html (for me the current version 
+is v27, which I use in the following command line examples) or by running the 
+command 
+`wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_27/gencode.v27.annotation.gtf.gz`.
+
+Since we want everything in BED format and only care about the feature type
+(gene, transcript, exon, UTR, etc.), we can extract this information using the
+command `awk -F'\t' '{print $1 FS ($4 - 1) FS $5 FS $3}' <( gunzip -c gencode.v27.annotation.gtf.gz ) > gencode.bed `. (We subtract 1 from
+the start position because the GTF format is 1-based and BED format is 0-based.)
+
+We can now use this BED file as an input for boostme (multiple BED files can be passed in the form of a vector of strings). To run this code, make sure `path.to.bed` is correct. 
+
+```{r}
+path.to.bed <- "../data/gencode.bed"
+b <- boostme(bs,
+             minCov = 10,
+             trainSize = 100000,
+             validateSize = 100000,
+             testSize = 100000,
+             featureBEDs = path.to.bed)
+```
+
 
 # Session Info
 
