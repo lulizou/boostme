@@ -10,7 +10,7 @@ vignette: >
 
 # Example
 
-Make a dummy `BSseq` object with 3 samples using example CpG positions from 
+Make a dummy `BSseq` object with 3 samples using example CpG positions from
 chromosome 22. `cov` is the total number of reads at a CpG; `meth` is the
 total number of methylated reads at a CpG.
 
@@ -34,15 +34,15 @@ bs <- BSseq(M = meth, Cov = cov, gr = chr22, sampleNames = c("s1", "s2", "s3"))
 
 Now with a `BSseq` object, we can use BoostMe to impute beta values at CpGs with
 total coverage below a user-specified depth (default is 10x). We assign the
-imputation result to a new variable, `b`, where the `rownames(b)` has the
-CpG coordinates. 
+imputation results to a new variable, `b`, where  `rownames(b)` has the
+CpG coordinates, and the columns are the samples. Note that entries with NA are CpGs that had a coverage below the specified threshold and did not have enough information to impute - typically, when the CpG was not above the threshold in at least two other samples. 
 
 BoostMe trains and imputes on each sample individually. By default, BoostMe
 uses the average beta value (calculated from the other two samples), the beta
 values of neighboring CpGs, and the distances to neighboring CpGs as features
-in the algorithm. Evaluation metrics  including RMSE, AUROC, AUPRC, and accuracy 
-can be saved to a .tsv file using the `save` parameter. The default training, 
-validation, and testing sizes are 1 million. Since we have much less data in 
+in the algorithm. Evaluation metrics  including RMSE, AUROC, AUPRC, and accuracy
+can be saved to a .tsv file using the `save` parameter. The default training,
+validation, and testing sizes are 1 million. Since we have much less data in
 this example, we set those manually.
 
 ```{r}
@@ -60,9 +60,9 @@ The evaluation metrics are pretty bad, since this is dummy data! (For a quieter 
 In my experiments, I found that adding in other genomic features such as tissue-specific ATAC-seq, GENCODE annotations, chromatin states, etc. only improved performance very modestly (i.e. non-significantly). Neighboring information and average beta value across samples seem to explain most of the signal. However, it's possible this result could be different depending on what tissue/disease state your data is from, or if you have a really good feature.
 
 This example will look at how to incorporate GENCODE annotations as features. BoostMe accepts features in BED format; features not in BED format require a bit
-of wrangling. First, you can get the GENCODE annotation file by downloading it at https://www.gencodegenes.org/releases/current.html (for me the current version 
-is v27, which I use in the following command line examples) or by running the 
-command 
+of wrangling. First, you can get the GENCODE annotation file by downloading it at https://www.gencodegenes.org/releases/current.html (for me the current version
+is v27, which I use in the following command line examples) or by running the
+command
 `wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_27/gencode.v27.annotation.gtf.gz`.
 
 Since we want everything in BED format and only care about the feature type
@@ -70,7 +70,7 @@ Since we want everything in BED format and only care about the feature type
 command `awk -F'\t' '{print $1 FS ($4 - 1) FS $5 FS $3}' <( gunzip -c gencode.v27.annotation.gtf.gz ) > gencode.bed `. (We subtract 1 from
 the start position because the GTF format is 1-based and BED format is 0-based.)
 
-We can now use this BED file as an input for boostme (multiple BED files can be passed in the form of a vector of strings). To run this code, make sure `path.to.bed` is correct. 
+We can now use this BED file as an input for boostme (multiple BED files can be passed in the form of a vector of strings). To run this code, make sure `path.to.bed` is correct.
 
 ```{r}
 path.to.bed <- "../data/gencode.bed"
