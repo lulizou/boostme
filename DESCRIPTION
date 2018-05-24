@@ -1,12 +1,13 @@
 Package: boostme
 Type: Package
-Title: What the Package Does (Title Case)
+Title: BoostMe - DNA methylation prediction within WGBS
 Version: 0.1.0
 Author: Luli S. Zou
 Maintainer: Luli S. Zou <lulizou@gmail.com>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Description: Imputes continuous methylation beta values in whole-genome
+    bisulfite sequencing data. Uses XGBoost and leverages information from at
+    least 3 WGBS samples.
+License: MIT License
 Encoding: UTF-8
 LazyData: true
 Imports: Rcpp (>= 0.12.15), dplyr, PRROC, bsseq, xgboost, GenomicRanges
