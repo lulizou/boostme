@@ -99,6 +99,10 @@ boostme <- function(bs,
                     verbose = TRUE) {
   # checks
   stopifnot(class(bs) == "BSseq")
+  if (trainSize + validateSize + testSize > nrow(bs)) {
+    stop('trainSize + validateSize + testSize must be <= num of CpGs in bsseq')
+  }
+  stopifnot(trainSize + validateSize + testSize <= nrow(bs))
   if (nrow(pData(bs)) < 3 & sampleAvg == TRUE) {
     stop("At least 3 samples are needed to use the sample average feature")
   }
