@@ -120,7 +120,12 @@ boostme <- function(bs,
                          "rmse_test", "auroc_test", "auprc_test", "acc_test")
 
   # only use the autosome
-  bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:22, sep=""))
+  if (grepl('chr', trainChr)) { # if using chr in the names
+    bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:22, sep=""))
+  } else { # else don't use chr in the names
+    bs <- chrSelectBSseq(bs, seqnames = seq(1,22,1))
+  }
+
 
   imputed <- getMeth(bs, type = "raw")
   if (typeof(imputed)=='S4') {
