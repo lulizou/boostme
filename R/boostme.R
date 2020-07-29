@@ -51,6 +51,8 @@
 #' (1 if present, else 0). Ignores all columns past the 4th. Ranges must be
 #' non-overlapping (can be solved with \code{bedtools merge} or separating into
 #' multiple BED files).
+#' @param mask logical value of whether to mask all unimputed values as NA
+#' in resulting data frame.
 #' @param seed optional integer random seed used before selecting random CpGs
 #' for training/validation/testing.
 #' @param threads (optional) number of threads to use for training. default = 2
@@ -93,6 +95,7 @@ boostme <- function(bs,
                     neighbMeth = TRUE,
                     neighbDist = TRUE,
                     featureBEDs = NULL,
+                    mask = FALSE,
                     threads = 2,
                     seed = 1,
                     save = NULL,
@@ -125,9 +128,13 @@ boostme <- function(bs,
   } else { # else don't use chr in the names
     bs <- chrSelectBSseq(bs, seqnames = seq(1,22,1))
   }
-
-
-  imputed <- getMeth(bs, type = "raw")
+  if (mask) {
+    message(paste(Sys.time(),
+                  "Masking unimputed values in resulting matrix"))
+    imputed <- matrix(NA, nrow = nrow(bs), ncol = ncol(bs))
+  } else {
+    imputed <- getMeth(bs, type = "raw")
+  }
   if (typeof(imputed)=='S4') {
     imputed <- as.data.frame(realize(imputed)@seed)
   }
@@ -135,7 +142,6 @@ boostme <- function(bs,
     message(paste(Sys.time(),
                   "Extracting positions from bs object (takes a bit)"))
   }
-
   rownames(imputed) <- as.character(granges(bs))
   for (i in 1:nrow(pData(bs))) { # Train a model for each sample
     # TODO: add in parallel option for this instead of loop (?)
@@ -217,10 +223,9 @@ boostme <- function(bs,
                           nthread = threads,
                           nrounds = 500,
                           watchlist = watchlist,
-                          objective = 'reg:linear',
+                          objective = 'reg:squarederror',
                           early_stopping_round = 10,
-                          verbose = 0,
-                          silent = 1)
+                          verbose = 0)
     valPreds <- predict(my_model, data.matrix(myValidate[, -1]))
     testPreds <- predict(my_model, data.matrix(myTest[, -1]))
 
@@ -292,6 +297,9 @@ boostme <- function(bs,
         newY <- as.data.frame(realize(newY)@seed)[, 1]
       }
       newY[enoughInfoToImpute] <- imputedValues
+      if (mask) {
+        newY[-enoughInfoToImpute] <- NA
+      }
       imputed[, i] <- newY
     }
   }
