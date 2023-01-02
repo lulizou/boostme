@@ -99,7 +99,8 @@ boostme <- function(bs,
                     threads = 2,
                     seed = 1,
                     save = NULL,
-                    verbose = TRUE) {
+                    verbose = TRUE.
+                    n_autosomes=22) {
   # checks
   stopifnot(class(bs) == "BSseq")
   if (trainSize + validateSize + testSize > nrow(bs)) {
@@ -124,9 +125,9 @@ boostme <- function(bs,
 
   # only use the autosome
   if (grepl('chr', trainChr)) { # if using chr in the names
-    bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:22, sep=""))
+    bs <- chrSelectBSseq(bs, seqnames = paste("chr", 1:n_autosomes, sep=""))
   } else { # else don't use chr in the names
-    bs <- chrSelectBSseq(bs, seqnames = seq(1,22,1))
+    bs <- chrSelectBSseq(bs, seqnames = seq(1,n_autosomes,1))
   }
   if (mask) {
     message(paste(Sys.time(),
