@@ -99,7 +99,7 @@ boostme <- function(bs,
                     threads = 2,
                     seed = 1,
                     save = NULL,
-                    verbose = TRUE.
+                    verbose = TRUE,
                     n_autosomes=22) {
   # checks
   stopifnot(class(bs) == "BSseq")
